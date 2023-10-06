@@ -1,0 +1,117 @@
+env:
+  TERM: alacritty
+
+window:
+  dimensions:
+    columns: 0
+    lines: 0
+  padding:
+    x: 5
+    y: 5
+  decorations: full
+
+scrolling:
+  history: 10000
+  multiplier: 100
+  faux_multiplier: 100
+  auto_scroll: true
+
+tabspaces: 2
+
+font:
+  normal:
+    family: Hack Nerd Font Mono
+  bold:
+    family: Hack Nerd Font Mono
+  italic:
+    family: Hack Nerd Font Mono
+  size: 9.5
+  offset:
+    x: 0
+    y: 0
+  glyph_offset:
+    x: 0
+    y: 0
+
+render_timer: false
+
+draw_bold_text_with_bright_colors: true
+
+bell:
+  animation: EaseOutExpo
+  duration: 0
+
+mouse:
+  double_click:
+    threshold: 300
+  triple_click:
+    threshold: 300
+  hide_when_typing: false
+
+selection:
+  semantic_escape_chars: ",│`|:\"' ()[]{}<>"
+  save_to_clipboard: false
+
+dynamic_title: true
+
+cursor:
+  style: Block
+  unfocused_hollow: true
+
+live_config_reload: true
+
+shell:
+  program: /bin/bash
+
+mouse_bindings:
+  - mouse: Right
+    action: PasteSelection
+
+key_bindings:
+  - key: V
+    mods: Alt
+    action: Paste
+  - key: C
+    mods: Alt
+    action: Copy
+  - key: S
+    mods: Alt
+    action: PasteSelection
+  - key: PageUp
+    action: ScrollPageUp
+  - key: PageDown
+    action: ScrollPageDown
+  - key: Return
+    mods: Control | Shift
+    action: SpawnNewInstance
+
+theme: Gruvbox-Light
+colors:
+  # Default colors
+  primary:
+    # hard contrast: background = '#f9f5d7'
+    background: '#fbf1c7'
+    # soft contrast: background = '#f2e5bc'
+    foreground: '#3c3836'
+
+  # Normal colors
+  normal:
+    black: '#fbf1c7'
+    red: '#cc241d'
+    green: '#98971a'
+    yellow: '#d79921'
+    blue: '#458588'
+    magenta: '#b16286'
+    cyan: '#689d6a'
+    white: '#7c6f64'
+
+  # Bright colors
+  bright:
+    black: '#928374'
+    red: '#9d0006'
+    green: '#79740e'
+    yellow: '#b57614'
+    blue: '#076678'
+    magenta: '#8f3f71'
+    cyan: '#427b58'
+    white: '#3c3836'
