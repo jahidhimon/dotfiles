@@ -1,0 +1,402 @@
++title My Minimal Emacs Config
+#+PROPERTY: header-args:emacs-lisp :tangle /home/imon/.emacs.d/minimal.el :mkdirp yes
+
+* System Configs
+** Configure package archives
+#+begin_src emacs-lisp
+
+	(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+													 ("org" . "https://orgmode.org/elpa/")
+													 ("elpa" . "https://elpa.gnu.org/packages/")))
+
+#+end_src
+
+** Configure use package
+#+begin_src emacs-lisp
+	(package-initialize)
+	(require 'use-package)
+#+end_src
+
+** System Clean
+*** Move Backup Files to tmp/backups
+
+#+begin_src emacs-lisp
+
+  (setq backup-directory-alist `(("." . ,(expand-file-name "tmp/backups" user-emacs-directory))))
+
+#+end_src
+
+*** Move Auto Save Files to tmp/auto-saves
+
+#+begin_src emacs-lisp
+
+  (make-directory (expand-file-name "tmp/auto-saves/" user-emacs-directory) t)
+  (setq auto-save-list-file-prefix (expand-file-name "tmp/auto-saves/sessions" user-emacs-directory)
+        auto-save-file-name-transforms `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t)))
+
+  (setq create-lockfiles nil)
+
+#+end_src
+
+*** Disable Lockfiles
+#+begin_src emacs-lisp
+
+  (setq create-lockfiles nil)
+
+#+end_src
+
+** GC Threshold
+Make gc pauses faster by decreasing the threshold.
+#+begin_src emacs-lisp
+  (setq gc-cons-threshold (* 2 1000 1000))
+#+end_src
+ 
+* UI configs
+** Basic UI
+
+#+begin_src emacs-lisp
+
+  (scroll-bar-mode -1)        ; Disable visible scrollbar
+  (tool-bar-mode -1)          ; Disable the toolbar
+  (tooltip-mode -1)           ; Disable tooltips
+  (set-fringe-mode 10)        ; Give some breathing room
+  (setq indent-tabs-mode nil)
+
+  (menu-bar-mode -1)            ; Disable the menu bar
+
+  (setq inhibit-startup-message t) ;; Disable splash screen
+
+  ;; Set up the visible bell
+  ;; (setq visible-bell t)
+
+#+end_src
+
+** Theme Settings
+#+begin_src emacs-lisp
+  (use-package darktooth-theme
+    :ensure t
+    :init (load-theme 'darktooth t))
+#+end_src
+ 
+** Extra settings
+*** Prevent UI Dialogs
+#+begin_src emacs-lisp
+  (setq use-dialog-box nil)
+#+end_src
+
+*** Auto Revert File
+#+begin_src emacs-lisp
+  (global-auto-revert-mode 1)
+#+end_src
+ 
+*** Remember last cursor location
+#+begin_src emacs-lisp
+  (save-place-mode 1)
+#+end_src
+
+** Font Face and Transparency
+
+#+begin_src emacs-lisp
+
+  (set-frame-parameter (selected-frame) 'alpha '(97 97))
+  (set-face-attribute 'default nil :font "Jetbrains Mono" :height 103)
+
+#+end_src
+
+* Vertico and Consult
+** Vertico
+#+begin_src emacs-lisp
+  (use-package vertico
+    :init
+    (vertico-mode)
+    :config
+    (define-key vertico-map "?" #'minibuffer-completion-help)
+    (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exit)
+    (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete))
+
+
+  (use-package vertico-directory
+    :after vertico
+    :ensure nil
+    ;; More convenient directory navigation commands
+    :bind (:map vertico-map
+                ("RET" . vertico-directory-enter)
+                ("DEL" . vertico-directory-delete-char)
+                ("M-DEL" . vertico-directory-delete-word))
+    ;; Tidy shadowed file names
+    :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+  (use-package orderless
+    :init
+    ;; Configure a custom style dispatcher (see the Consult wiki)
+    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+    (setq completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion)))))
+#+end_src
+
+** Consult
+#+begin_src emacs-lisp
+  (use-package consult
+    :bind (;; C-c bindings (mode-specific-map)
+           ("C-c h" . consult-history)
+           ("C-c m" . consult-mode-command)
+           ("C-c k" . consult-kmacro)
+           ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+           ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+           ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+           ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+           ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+           ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+           ;; Custom M-# bindings for fast register access
+           ("M-#" . consult-register-load)
+           ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+           ("C-M-#" . consult-register)
+           ;; Other custom bindings
+           ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+           ;; M-g bindings (goto-map)
+           ("M-g e" . consult-compile-error)
+           ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+           ("M-g g" . consult-goto-line)             ;; orig. goto-line
+           ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+           ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g i" . consult-imenu)
+           ("M-g I" . consult-imenu-multi)
+           ;; M-s bindings (search-map)
+           ("M-s d" . consult-find)
+           ("M-s D" . consult-locate)
+           ("M-s g" . consult-grep)
+           ("M-s G" . consult-git-grep)
+           ("M-s r" . consult-ripgrep)
+           ("M-s l" . consult-line)
+           ("M-s L" . consult-line-multi)
+           ("M-s m" . consult-multi-occur)
+           ("M-s k" . consult-keep-lines)
+           ("M-s u" . consult-focus-lines)
+           ;; Isearch integration
+           ("M-s e" . consult-isearch-history)
+           :map isearch-mode-map
+           ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+           ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+           ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+           ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+           ;; Minibuffer history
+           :map minibuffer-local-map
+           ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+           ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+    :init
+    (setq register-preview-delay 0.5
+          register-preview-function #'consult-register-format)
+    (advice-add #'register-preview :override #'consult-register-window)
+    (setq xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
+    :config
+    (consult-customize
+     consult-theme :preview-key '(:debounce 0.2 any)
+     consult-ripgrep consult-git-grep consult-grep
+     consult-bookmark consult-recent-file consult-xref
+     consult--source-bookmark consult--source-file-register
+     consult--source-recent-file consult--source-project-recent-file
+     ;; :preview-key (kbd "M-.")
+     :preview-key '(:debounce 0.4 any))
+    (setq consult-narrow-key "<"))
+#+end_src
+** Helpful
+
+#+begin_src emacs-lisp
+
+  (use-package helpful
+    :commands (helpful-callable helpful-variable helpful-command helpful-key)
+    :config
+    (global-set-key (kbd "C-h f") #'helpful-callable)
+    (global-set-key (kbd "C-h v") #'helpful-variable)
+    (global-set-key (kbd "C-h k") #'helpful-key)
+    (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+    (global-set-key (kbd "C-h F") #'helpful-function)
+    (global-set-key (kbd "C-h C") #'helpful-command))
+
+#+end_src
+
+* Tools
+** Dired use-package
+#+begin_src emacs-lisp
+  (use-package dired
+    :ensure nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first")))
+#+end_src
+ 
+** Multiple Cursors
+#+begin_src emacs-lisp
+  (use-package multiple-cursors
+    :ensure t
+    :config
+    (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
+    (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+    (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+    (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this))
+#+end_src
+
+** Ace Jump
+#+begin_src emacs-lisp
+  (use-package ace-jump-mode
+    :ensure t
+    :bind ("C-," . ace-jump-mode))
+#+end_src
+
+** Flycheck
+#+begin_src emacs-lisp
+
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode)
+    :config
+    (setq-default flycheck-disabled-checkers
+      (append flycheck-disabled-checkers
+              '(javascript-jshint json-jsonlist)))
+    (flycheck-add-mode 'javascript-eslint 'web-mode))
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+
+#+end_src
+ 
+** Tab config
+
+#+begin_src emacs-lisp
+
+  (setq-default tab-width 2)
+
+#+end_src
+
+** Company Mode
+
+#+begin_src emacs-lisp
+
+  (use-package company
+    :ensure t
+    :custom
+    (company-minimum-prefix-length 1)
+    (comapny-idle-delay 0.0))
+
+  (use-package company-box
+    :ensure t
+    :hook (company-mode . company-box-mode))
+
+  (add-hook 'prog-mode-hook 'company-mode)
+
+#+end_src
+
+** Paredit
+#+begin_src emacs-lisp
+  (use-package paredit
+    :ensure t
+    :config
+    (defun myconfig/mode-space-delimiter-p (endp delimiter)
+      "Don't insert a space before delimiters in certain modes
+                            https://github.com/chadhs/dotfiles/blob/master/editors/emacs-config.org#paredit"
+      (or
+       (bound-and-true-p js2-mode)
+       (bound-and-true-p js-mode)
+       (bound-and-true-p javascript-mode)))
+    (add-to-list 'paredit-space-for-delimiter-predicates #'my-config/mode-space-delimiter-p))
+
+  (add-hook 'clojure-mode-hook          'enable-paredit-mode)
+  (add-hook 'cider-repl-mode-hook       'enable-paredit-mode)
+  (add-hook 'cider-mode-hook            'enable-paredit-mode)
+  (add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           'enable-paredit-mode)
+
+#+end_src
+
+** indentation highlighting
+#+begin_src emacs-lisp
+  (use-package highlight-indent-guides
+    :defer t
+    :hook ((prog-mode . highlight-indent-guides-mode))
+    :diminish highlight-indent-guides-mode
+    :config
+    (setq highlight-indent-guides-method 'character
+          highlight-indent-guides-responsive 'top))
+#+end_src
+    
+** Drag stuff
+#+begin_src emacs-lisp
+  (use-package drag-stuff
+    :ensure t
+    :config
+    (drag-stuff-define-keys)
+    (drag-stuff-global-mode))
+#+end_src
+
+* Language Modes
+** CC Mode
+#+begin_src emacs-lisp
+
+  (setq c-default-style "linux"
+        c-basic-offset 2)
+  (use-package flycheck-pkg-config
+    :ensure t)
+
+#+end_src
+
+** Latex Mode
+#+begin_src emacs-lisp
+  (use-package tex
+    :ensure auctex
+    :defer t
+    :config (setq TeX-view-progra-selection '(((output-dvi has-no-display-manager)
+                                               "dvi2tty")
+                                              ((output-dvi style-pstricks)
+                                               "dvips and gv")
+                                              (output-dvi "xdvi")
+                                              (output-pdf "zathura")
+                                              (output-html "xdg-open"))))
+#+end_src
+
+** Shell Mode
+#+begin_src emacs-lisp
+  (use-package sh-script
+    :config
+    (setq sh-basic-offset 2))
+#+end_src
+
+** Go
+#+begin_src emacs-lisp
+  (use-package go-mode
+    :ensure t)
+#+end_src
+
+
+** Python
+#+begin_src emacs-lisp
+	(use-package elpy
+		:ensure t
+		:init
+		(elpy-enable))
+#+end_src
+
+** Ruby
+#+begin_src emacs-lisp
+  (use-package ruby-end
+    :after ruby-mode
+    :ensure t)
+
+  (use-package robe
+    :after ruby-mode
+    :ensure t
+    :config
+    (global-robe-mode)
+    (eval-after-load 'company
+      '(push 'company-robe company-backends)))
+
+  (use-package inf-ruby
+    :ensure t)
+#+end_src
+
+
