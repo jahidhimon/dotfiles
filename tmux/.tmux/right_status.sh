@@ -60,7 +60,7 @@ function memory_usage() {
 }
 
 function main() {
-  battery_meter
+  # battery_meter
   memory_usage
   date_time
 }
