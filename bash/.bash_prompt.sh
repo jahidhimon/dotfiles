@@ -31,7 +31,17 @@ NORMAL="\[\033[0m\]"
 RED="\[\033[31;1m\]"
 GLAMBDA="${BGREEN}λ${NORMAL}"
 RLAMBDA="${RED}λ${NORMAL}"
+
+# function git_branch() {
+# 	if git rev-parse --is-inside-work-tree &>/dev/null ; then
+# 		BRANCH=$(git symbolic-ref --short HEAD)
+# 		echo "${BYELLOW}(${BRANCH})${NORMAL}"
+# 	else
+# 		echo ""
+# 	fi
+# }
+
 SELECT="if [ \$? = 0 ]; then echo \"${GLAMBDA}\"; else echo \"${RLAMBDA}\"; fi"
 
 # Throw it all together 
-PS1="${GYELLOW}[${BCYAN}\W${NORMAL}${GYELLOW}] \`${SELECT}\` ${NORMAL}"
+PS1="[${BCYAN}\W${NORMAL}] \`${SELECT}\` ${NORMAL}"

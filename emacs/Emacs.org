@@ -120,7 +120,7 @@ Make gc pauses faster by decreasing the threshold.
 
   (use-package doom-themes
     :ensure t
-    :config (load-theme 'doom-palenight t))
+    :config (load-theme 'doom-solarized-dark-high-contrast t))
 
   (use-package all-the-icons
       :config (setq all-the-icons-scale-factor 1.0))
@@ -131,7 +131,7 @@ Make gc pauses faster by decreasing the threshold.
       (setq heaven-and-hell-theme-type 'dark) ;; Omit to use light by default
       (setq heaven-and-hell-themes
             '((light . doom-gruvbox-light)
-              (dark . doom-palenight)))
+              (dark . doom-solarized-dark-high-contrast)))
       ;; Optionall, load themes without asking for confirmation.
       (setq heaven-and-hell-load-theme-no-confirm t)
       :hook (after-init . heaven-and-hell-init-hook)
@@ -322,6 +322,43 @@ This package colorizes brackets like rainbow
 
 #+end_src
 
+* Eshell
+** Eshell configuration Function
+#+begin_src emacs-lisp
+(defun eshell/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
+#+end_src
+
+** Eshell Git Prompt
+
+#+begin_src emacs-lisp
+(use-package eshell-git-prompt
+  :after eshell)
+#+end_src
+
+** Eshell use-package
+
+#+begin_src emacs-lisp
+(use-package eshell
+  :hook (eshell-first-time-mode . eshell/configure-eshell)
+  :config
+
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "man" "vim")))
+
+  (eshell-git-prompt-use-theme 'powerline))
+#+end_src
+ 
 * Org Mode
 ** Org Font Setup
 #+begin_src emacs-lisp
@@ -871,12 +908,17 @@ This is a very important packages for me. Because I like to open only one dired 
 
 ** Ruby mode
 #+begin_src emacs-lisp
-  (use-package robe
-    :ensure t
-    :hook (ruby-mode . robe-mode))
-  (use-package ruby-end
-    :ensure t
-    :hook (ruby-mode . ruby-end-mode))
+    (use-package robe
+      :ensure t
+      :hook (ruby-mode . robe-mode)
+      (ruby-mode . lsp-deferred))
+    (use-package ruby-end
+      :ensure t
+      :hook (ruby-mode . ruby-end-mode))
+    (use-package rspec-mode
+      :ensure t
+      :config (eval-after-load 'rspec-mode
+                '(rspec-install-snippets)))
 #+end_src
 
 ** SQL mode
@@ -944,6 +986,12 @@ This is a very important packages for me. Because I like to open only one dired 
     (setq web-mode-markup-indent-offset 2)
     (setq web-mode-attr-indent-offset 2)
     (setq web-mode-css-indent-offset 2))
+#+end_src
+
+** CSS Mode
+#+begin_src emacs-lisp
+  (use-package css-mode
+    :config (setq-default css-indent-offset 2))
 #+end_src
 
 * Other Tools
